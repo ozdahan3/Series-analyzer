@@ -1,0 +1,174 @@
+#!/bin/bash
+
+# Function to validate the series
+
+validate_series() {
+      # !!!ATTENTION: We are using a global variable "series" instead of a local variable, !!!!!
+ #!!! which could lead to scoping issues in the code. Be cautious as this can !!!
+ # !!!cause unintended side effects if "series" is modified in different functions !!!  
+ # !!!or parts of the script. Consider using local variables to avoid potential conflicts. !!!!
+        series=("$@")
+
+    if [[ ${#series[@]} -lt 3 ]]; then
+        echo "Error: The series must contain at least 3 positive numbers."
+        echo
+        return 1
+    fi
+    
+    for num in ${series[@]}; do
+        if ! echo "$num" | grep -qE '^[0-9]*\.?[0-9]+$'; then
+            echo "Error: All numbers must be non-negative numbers (integers or decimals)."
+            echo
+            return 1
+        fi
+    done
+    
+    return 0
+}
+
+
+
+# Function to prompt user for input
+get_user_input() {
+      # !!1ATTENTION: We are using a global variable "series" instead of a local variable, !!!
+ # !!!which could lead to scoping issues in the code. Be cautious as this can !!!
+ # !!!cause unintended side effects if "series" is modified in different functions !!!
+ # !!!or parts of the script. Consider using local variables to avoid potential conflicts.!!!
+        series=()
+    while true; do
+       
+        read -p "Please enter a series of at least Three positive numbers separated by spaces: " -a series
+        validate_series "${series[@]}"
+        if [[ $? -eq 0 ]]; then
+            break
+        else
+            echo "Invalid input. Please try again and follow the instructions."
+            echo
+        fi
+    done
+
+}
+
+
+
+# Function to display the series
+display_series() {
+    echo "Series: ${series[*]}"
+}
+
+# Function to display the series sorted
+display_sorted_series() {
+     sorted_series=($(for num in "${series[@]}"; do echo $num; done | sort -n))
+    echo "Sorted Series: ${sorted_series[*]}"
+}
+
+# Function to display the max value in the series
+display_max() {
+    max=$(printf "%s\n" "${series[@]}" | sort -n | tail -1)
+    echo "The Max Value is : $max"
+}
+
+# Function to display the min value in the series
+display_min() {
+    min=$(printf "%s\n" "${series[@]}" | sort -n | head -1)
+    echo "The Min Valu is : $min"
+}
+
+# Function to display the average of the series
+display_avg() {
+    sum=$(printf "%s\n" "${series[@]}" | awk '{s+=$1} END {print s}')
+    avg=$(echo "$sum / ${#series[@]}" | bc -l)
+    echo "The Average of the series is : $avg"
+}
+
+# Function to display the number of elements in the series
+display_count() {
+    echo "The Number of Elements is : ${#series[@]}"
+}
+
+# Function to display the sum of the series
+display_sum() {
+    sum=$(printf "%s\n" "${series[@]}" | awk '{s+=$1} END {print s}')
+    echo "The Sum of the series is : $sum"
+}
+
+# Function to display the menu
+display_menu() {
+    echo "     Please choose an option:"
+    echo "1. Input a Series (Replace the current series)"
+    echo "2. Display the series in the order it was entered"
+    echo "3. Display the series in sorted order (from low to high)"
+    echo "4. Display the Max value of the series"
+    echo "5. Display the Min value of the series"
+    echo "6. Display the Average of the series"
+    echo "7. Display the Number of elements in the series"
+    echo "8. Display the Sum of the series"
+    echo "9. Exit"
+}
+
+# Main loop
+while true; do
+    if [[ "$#" -ge 3 || ! -z $@ ]]; then
+      series=("$@")
+        validate_series ${series[@]}
+        if [ $? -ne 0 ]; then
+            echo "Invalid external arguments. Please Follow the instructions ."
+            echo
+            
+              get_user_input
+                echo
+               echo "This is the Series : ${series[@]}"
+               echo
+        fi
+    else
+        get_user_input
+    fi
+
+    while true; do
+        echo "--------------------------------------"
+        echo 
+        echo "Welcome to the series analyzer menu : "
+        display_menu
+        read -p "Enter your choice (1-9): " choice
+        echo "--------------------------------------"
+        echo
+        clear
+        echo
+        case $choice in
+            1)
+                get_user_input 
+                ;;
+            2)
+                display_series
+                ;;
+            3)
+                display_sorted_series 
+                ;;
+            4)
+                display_max 
+                ;;
+            5)
+                display_min 
+                ;;
+            6)
+                display_avg
+                ;;
+            7)
+                display_count 
+                ;;
+            8)
+                display_sum 
+                ;;
+            9)
+                echo "Exiting..."
+                exit 0
+                ;;
+            *)
+                echo "Invalid choice. Please select a valid option."
+                ;;
+        esac
+        echo
+        echo "--------------------------------------"
+    done
+    echo
+done
